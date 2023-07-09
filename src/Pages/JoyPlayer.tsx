@@ -11,6 +11,7 @@ import {
   Grid,
   GridItem,
 } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 function DialogueBox(props: any) {
   const { character_name, text, modifiers, ...otherProps } = props;
 
@@ -114,7 +115,6 @@ function DialogueDisplay(props: any) {
   }, [temp]);
 
   const handleAction = (action: any) => {
-    console.log("image", action["modifiers"]);
     setCurrentAction(action);
     if (action["modifiers"]["image"]) {
       invoke("get_image", {
@@ -145,24 +145,51 @@ function DialogueDisplay(props: any) {
     }
   };
 
-  const getNextAction = async () => {
-    console.log("Next");
-    await invoke("next_action").then((res) => {
-      invoke("get_current_action").then((res: any) => {
-        let action = JSON.parse(res);
-        handleAction(action);
-      });
-    });
-  };
-
   return (
-    <Box width="100vw" {...otherProps}>
+    <Box width="100vw" height="100%" {...otherProps}>
       <Box bgColor="gray.800" height="100%">
         {box}
       </Box>
-      <Button width="100%" onClick={getNextAction}>
-        Next Action
-      </Button>
+    </Box>
+  );
+}
+
+function BottomBar(props: any) {
+  const navigate = useNavigate();
+
+  const getNextAction = async () => {
+    console.log("Next");
+    await invoke("next_action");
+  };
+  return (
+    <Box color="gray.100" height="100%" width="100%">
+      <Flex
+        flexDir="row"
+        height="100%"
+        width="100%"
+        alignItems="center"
+        justifyContent="center"
+        gap="8px"
+      >
+        <Button
+          onClick={getNextAction}
+          height="100%"
+          width="80px"
+          rounded="none"
+          fontSize="xl"
+        >
+          Next
+        </Button>
+        <Button
+          onClick={() => navigate("/")}
+          height="100%"
+          width="80px"
+          rounded="none"
+          fontSize="xl"
+        >
+          End
+        </Button>
+      </Flex>
     </Box>
   );
 }
@@ -170,15 +197,23 @@ function DialogueDisplay(props: any) {
 function JoyPlayer(props: any) {
   const [imgSrc, setImgSrc] = useState("");
   return (
-    <Flex direction="column" h="100vh" overflow="hidden" bgColor="purple.900">
+    <Flex
+      direction="column"
+      h="100vh"
+      overflow="hidden"
+      bgColor="purple.900"
+      border="2px"
+      borderColor="pink.200"
+    >
       <Box h="65%">
-        <Center h="100%" bgColor="red">
-          <Image src={imgSrc} style={{ maxHeight: "100%", maxWidth: "100%" }} />
+        <Center h="100%" mt="10px">
+          <Image src={imgSrc} height="100%" width="auto" />
         </Center>
       </Box>
 
       <Box
         h="30%"
+        mt="10px"
         overflowY="auto"
         position="absolute"
         bottom="5%"
@@ -187,9 +222,8 @@ function JoyPlayer(props: any) {
         <DialogueDisplay imageSetter={setImgSrc} />
       </Box>
 
-      <Box h="5%" bottom="0" position="absolute">
-        {/* Your bottom bar content */}
-        Bottom bar
+      <Box h="5%" w="100%" bottom="0" position="absolute">
+        <BottomBar />
       </Box>
     </Flex>
   );
