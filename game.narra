@@ -1,0 +1,26 @@
+@declare <<
+    let count = 0;
+>>
+
+@tree main 
+"You can't do that on television, said an old woman, her teeth seemingly falling out as she spoke."
+-> #color: 55 OldWoman : "Are you listening to what I'm saying ? Kids these days"
+-> "She shrugs and walks away, leaving you to your own devices."
+-> "What do you do ?"
+-> @choice 
+|"Look down"| "You look down, and see a small, black, leather-bound book."
+                -> #color:15 MC: "Where am I ?" -> "We looping" -> @jump loop -> "We're done looping"
+|"End it"| "You end it all, and jump off the bridge." -> @jump kysend
+;
+
+@tree loop
+"Increased loop count"
+-> #id:"loop_inc" @eval <<count = count + 1;>>
+-> @match <<count < 3>>
+    |true| "Looping again" -> "ALOOP" -> @jump loop
+    |false| "Looping done" -> "HALLLOOOP" -> @jump kysend
+    ;
+
+@tree kysend
+"You've decided that pursuing this life is not worth it, and you jump off the bridge. Why put in the effort to understand the world, when you can just end it all ?"
+-> "Bad ending 1"

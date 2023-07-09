@@ -1,0 +1,28 @@
+@declare <<
+    let count = 0;
+>>
+
+@tree main 
+"You can't do that on television, said an old woman, her teeth seemingly falling out as she spoke. I'm changing this to test"
+-> #text-color: "blue.200" OldWoman : "Are you listening to what I'm saying ? Kids these days"
+-> #text-color:"red.500" #text-fontSize:"4xl" "She shrugs and walks away, leaving you to your own devices."
+-> #text-fontSize:"4xl" "What do you do ?"
+-> #text:"My choice has a text now" #text-fontSize:"4xl" @choice 
+|"Look down"| "You look down, and see a small, black, leather-bound book."
+                -> #color:15 MC: "Where am I ?" -> "We looping" -> @jump loop -> "We're done looping"
+|"End it"| "You end it all, and jump off the bridge." -> @jump kysend
+;
+
+@tree loop
+#!block "Increased loop count"
+-> #id:"loop_inc" @eval <<count = count + 1;>>
+-> #block "Blocking test should show up"
+-> #!block "Blocking test should not show up"
+-> #!block @match <<count < 3>>
+    |true| "Looping again" -> "ALOOP" <> <<" From Rhai with count : " + count >> -> @jump loop
+    |false| "Looping done" -> "HALLLOOOP" -> @jump kysend
+    ;
+
+@tree kysend
+"You've decided that pursuing this life is not worth it, and you jump off the bridge. Why put in the effort to understand the world, when you can just end it all ?"
+-> "Bad ending 1"
