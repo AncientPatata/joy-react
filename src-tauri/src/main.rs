@@ -9,6 +9,7 @@ use base64::Engine;
 use image::io::Reader as ImageReader;
 
 use std::io::Cursor;
+use std::path::Path;
 use std::sync::Mutex;
 use std::{cell::RefCell, fs, rc::Rc};
 
@@ -83,15 +84,15 @@ fn get_current_action(state: tauri::State<'_, NarraState>) -> String {
 
 #[tauri::command]
 fn next_action(state: tauri::State<'_, NarraState>) {
-    println!(
-        "{}",
-        state
-            .mutex_handler
-            .lock()
-            .unwrap()
-            .borrow_mut()
-            .current_action
-    );
+    // println!(
+    //     "{}",
+    //     state
+    //         .mutex_handler
+    //         .lock()
+    //         .unwrap()
+    //         .borrow_mut()
+    //         .current_action
+    // );
     state.mutex_narra.lock().unwrap().handle_action();
 }
 
@@ -103,7 +104,7 @@ fn perform_choice(state: tauri::State<'_, NarraState>, choice: usize) {
 #[tauri::command]
 fn read_game(state: tauri::State<'_, NarraState>, game_archive_path: String) {
     *state.game_archive_path.lock().unwrap() = game_archive_path.clone();
-    let compiled_file = fs::read_to_string(game_archive_path + "game.nb").unwrap();
+    let compiled_file = fs::read_to_string(Path::new(&game_archive_path).join("game.nb")).unwrap();
     state.mutex_narra.lock().unwrap().read_file(compiled_file);
     state.mutex_narra.lock().unwrap().init();
 }
@@ -112,7 +113,8 @@ fn read_game(state: tauri::State<'_, NarraState>, game_archive_path: String) {
 fn get_image(state: tauri::State<'_, NarraState>, image_filepath: String) -> String {
     println!("{image_filepath}");
     let archive_path = state.game_archive_path.lock().unwrap().clone();
-    let img = ImageReader::open(format!("{archive_path}{image_filepath}"))
+
+    let img = ImageReader::open(Path::new(&archive_path).join(image_filepath))
         .unwrap()
         .decode()
         .unwrap();

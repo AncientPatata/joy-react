@@ -4,7 +4,7 @@
 
 @tree main 
 "You can't do that on television, said an old woman, her teeth seemingly falling out as she spoke. I'm changing this to test"
--> #text-color: "blue.200" OldWoman : "Are you listening to what I'm saying ? Kids these days"
+-> #text-color: "blue.200" #image:"cat.jpeg" OldWoman : "Are you listening to what I'm saying ? Kids these days"
 -> #text-color:"red.500" #text-fontSize:"4xl" "She shrugs and walks away, leaving you to your own devices."
 -> #text-fontSize:"4xl" "What do you do ?"
 -> #text:"My choice has a text now" #text-fontSize:"4xl" @choice 
