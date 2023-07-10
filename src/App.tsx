@@ -30,6 +30,7 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+  fetch("image://localhost/").then((res) => console.log(res));
   return (
     <>
       <CSSReset />

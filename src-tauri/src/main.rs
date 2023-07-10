@@ -1,9 +1,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use base64::alphabet::Alphabet;
 use base64::engine::{general_purpose, GeneralPurpose, GeneralPurposeConfig};
 use serde_json as json;
+use url::{ParseError, Url};
 
 use base64::Engine;
 use image::io::Reader as ImageReader;
@@ -128,6 +128,19 @@ fn get_image(state: tauri::State<'_, NarraState>, image_filepath: String) -> Str
     b64
 }
 
+#[tauri::command]
+fn get_absolute_game_path(state: tauri::State<'_, NarraState>) -> String {
+    let archive_path = state.game_archive_path.lock().unwrap().clone();
+    let res = fs::canonicalize(Path::new(&archive_path))
+        .unwrap()
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    let fixed_res = res[4..].to_string();
+    println!("Path : {fixed_res}"); // Weird hack idk if this problem of "trailing" / is in all systems.. TODO
+    fixed_res
+}
+
 fn main() {
     let handler = NarraHandler::new();
     let handler_ptr = Rc::new(RefCell::new(handler));
@@ -144,8 +157,28 @@ fn main() {
             get_current_action,
             perform_choice,
             read_game,
-            get_image
+            get_image,
+            get_absolute_game_path
         ])
+        // .register_uri_scheme_protocol("image", |_app, req| {
+        //     println!("HELLO FROM JS");
+        //     let url: Url = req.uri().parse().unwrap();
+        //     println!("{url}");
+        //     let img = ImageReader::open(Path::new("./joiport").join("18.jpg"))
+        //         .unwrap()
+        //         .decode()
+        //         .unwrap();
+        //     let mut buf = Cursor::new(Vec::new());
+        //     img.write_to(&mut buf, image::ImageOutputFormat::Png)
+        //         .unwrap();
+        //     let img_bytes = buf.into_inner();
+        //     tauri::http::ResponseBuilder::new()
+        //         .header("Origin", "*")
+        //         .mimetype("image/png")
+        //         .header("Content-Length", img_bytes.len())
+        //         .status(200)
+        //         .body(img_bytes)
+        // })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 function HomePage(props: any) {
   const navigate = useNavigate();
-  const [packageName, setPackageName] = useState("./test_game");
+  const [packageName, setPackageName] = useState("./joiport");
   return (
     <Box bgColor="purple.900" height="100vh">
       <Box paddingTop="120px">

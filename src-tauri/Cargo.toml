@@ -13,13 +13,14 @@ edition = "2021"
 tauri-build = { version = "1.4", features = [] }
 
 [dependencies]
-tauri = { version = "1.4", features = ["shell-open"] }
+tauri = { version = "1.4", features = [ "path-all", "protocol-asset", "fs-all", "shell-open"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 narra_rs = {path="../../../narra-rs"}
 mini-fs = {version="0.2.2", features = ["zip"] }
 image = "0.24.6"
 base64 = "0.21.2"
+url = "2.4.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

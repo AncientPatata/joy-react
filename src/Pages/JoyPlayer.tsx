@@ -1,3 +1,6 @@
+import { join } from "@tauri-apps/api/path";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
+
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import {
@@ -10,95 +13,143 @@ import {
   Center,
   Grid,
   GridItem,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-function DialogueBox(props: any) {
-  const { character_name, text, modifiers, ...otherProps } = props;
+import Countdown from "react-countdown";
+import {
+  DialogueDisplay,
+  BottomBar,
+  DialogueBox,
+  ChoiceBox,
+} from "../Components/Narra";
+import SToolsContainer from "../Components/STools";
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
-  let dlg_text_modifiers = Object.keys(modifiers)
-    .filter((key) => key.includes("text-"))
-    .map((key) => key.replace("text-", ""))
-    .reduce((obj, key) => {
-      return {
-        ...obj,
-        [key]: modifiers["text-" + key],
-      };
-    }, {});
-  // console.log("DLG TEXT MODIFIERS");
-  // console.log(dlg_text_modifiers);
+function Timer(props: any) {
+  const { timerState, timerSetter, ...otherProps } = props;
 
   return (
-    <Box {...otherProps}>
-      <Box textAlign="center" color="white" fontSize="2xl" paddingTop="7px">
-        <Text>{character_name}</Text>
-      </Box>
-      <Box
-        minHeight="100%"
-        paddingLeft="15px"
-        paddingRight="15px"
-        paddingBottom="15px"
-        overflowY="auto"
-      >
-        <Text
-          fontWeight="thin"
-          fontSize="large"
-          color="white"
-          {...dlg_text_modifiers}
-        >
-          {text}
-        </Text>
-      </Box>
+    <Box
+      position="absolute"
+      top="40px"
+      left="40px"
+      width="fit-content"
+      height="25px"
+    >
+      {timerState.useTimer ? (
+        <Box bgColor="white">
+          <Countdown
+            date={Date.now() + timerState.time}
+            onComplete={() => timerSetter({ useTimer: false })}
+          ></Countdown>
+        </Box>
+      ) : (
+        <div></div>
+      )}
     </Box>
   );
 }
 
-function ChoiceBox(props: any) {
-  const { choices, modifiers, ...otherProps } = props;
-  const performChoice = async (index: Number) => {
-    invoke("perform_choice", { choice: index }).then((res) => {
-      invoke("next_action");
-    });
-  };
-
-  let choice_text_modifiers = Object.keys(modifiers)
-    .filter((key) => key.includes("text-"))
-    .map((key) => key.replace("text-", ""))
-    .reduce((obj, key) => {
-      return {
-        ...obj,
-        [key]: modifiers["text-" + key],
-      };
-    }, {});
-
-  return (
-    <Box {...otherProps}>
-      <Text {...choice_text_modifiers}>
-        {modifiers["text"] && <Text>{modifiers["text"]}</Text>}
-      </Text>
-      <Flex flexDir="column" height="100px">
-        {choices.map((choice: String, index: Number) => {
-          return (
-            <Button
-              onClick={() => performChoice(index)}
-              rounded="none"
-              marginTop="5px"
-            >
-              Choice : {choice}
-            </Button>
-          );
-        })}
-      </Flex>
-    </Box>
+function parseTools(modifiers: Object) {
+  //console.log("MODIFIERS : ", modifiers);
+  let toolNames = [];
+  for (const [key, value] of Object.entries(modifiers)) {
+    if (key.includes("stu-") && value === true) {
+      toolNames.push(key.replace("stu-", ""));
+    }
+  }
+  //console.log("TOOL NAMES : ", toolNames);
+  let tools = Object.fromEntries(
+    toolNames.map((toolName) => {
+      let toolModifiers = {};
+      for (const [key, value] of Object.entries(modifiers)) {
+        if (key.includes("st-" + toolName + "-") && value !== undefined) {
+          // @ts-ignore
+          toolModifiers[
+            key.replace("st-" + toolName + "-", "") //.replace(/-/g, "_")
+          ] = value;
+        }
+      }
+      return [toolName, toolModifiers];
+    })
   );
+  //console.log("TOOLS : ", tools);
+  return tools;
 }
 
-function DialogueDisplay(props: any) {
-  const { imageSetter, ...otherProps } = props;
-  const [box, setBox] = useState(<div />);
+function ImagePreview(props: any) {
+  const { imageSrc, isOpen, onClose, ...otherProps } = props;
+  if (isOpen)
+    return (
+      <Box position="absolute" w="100vw" h="100vh" m="0" p="0" {...otherProps}>
+        <Flex flexDir="column" w="100%" h="100%">
+          <TransformWrapper
+            initialScale={1}
+            // initialPositionX={200}
+            // initialPositionY={100}
+          >
+            {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+              <>
+                <Flex height="40px" width="100%">
+                  <Button
+                    onClick={() => zoomIn()}
+                    w="100%"
+                    rounded="none"
+                    colorScheme="whatsapp"
+                    roundedTopLeft="12px"
+                  >
+                    Zoom In
+                  </Button>{" "}
+                  <Button
+                    onClick={() => zoomOut()}
+                    w="100%"
+                    rounded="none"
+                    colorScheme="whatsapp"
+                    //roundedTop="12px"
+                  >
+                    Zoom Out
+                  </Button>{" "}
+                  <Button
+                    onClick={() => resetTransform()}
+                    w="100%"
+                    rounded="none"
+                    colorScheme="whatsapp"
+                    //roundedTop="12px"
+                  >
+                    Reset Transform
+                  </Button>
+                  <Button
+                    onClick={onClose}
+                    w="100%"
+                    rounded="none"
+                    colorScheme="red"
+                    roundedTopRight="12px"
+                  >
+                    Close
+                  </Button>
+                </Flex>
 
-  const [temp, setTemp] = useState(0);
+                <TransformComponent>
+                  <img src={imageSrc} />
+                </TransformComponent>
+              </>
+            )}
+          </TransformWrapper>
+        </Flex>
+      </Box>
+    );
+}
+
+function JoyPlayer(props: any) {
+  const [imgSrc, setImgSrc] = useState("");
+  const [gameDir, setGameDir] = useState(null);
+  const [assetSrc, setAssetSrc] = useState("");
   const [currentAction, setCurrentAction] = useState({});
-
+  const [temp, setTemp] = useState(0);
+  const [box, setBox] = useState(<div></div>);
+  const [tools, setTools] = useState([]);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   useEffect(() => {
     setInterval(() => {
       setTemp((prevTemp) => prevTemp + 1);
@@ -116,14 +167,13 @@ function DialogueDisplay(props: any) {
 
   const handleAction = (action: any) => {
     setCurrentAction(action);
+    //console.log("action : ", action);
     if (action["modifiers"]["image"]) {
-      invoke("get_image", {
-        imageFilepath: action["modifiers"]["image"],
-      }).then((b64: any) => {
-        //console.log("data:image/jpeg;base64," + b64);
-        imageSetter("data:image/jpeg;base64," + b64);
-      });
+      setImgSrc(action["modifiers"]["image"]);
     }
+    //@ts-ignore
+    setTools(parseTools(action["modifiers"]));
+
     if (action["event_type"] === "Dialogue") {
       //console.log(res);
       setBox(
@@ -145,87 +195,63 @@ function DialogueDisplay(props: any) {
     }
   };
 
+  useEffect(() => {
+    invoke("get_absolute_game_path").then((res: any) => {
+      if (res !== gameDir) {
+        setGameDir(res);
+      }
+    });
+  }, [gameDir]);
+  if (gameDir) {
+    join(gameDir, imgSrc).then((path) => {
+      setAssetSrc(convertFileSrc(path));
+    });
+  }
   return (
-    <Box width="100vw" height="100%" {...otherProps}>
-      <Box bgColor="gray.800" height="100%">
-        {box}
-      </Box>
-    </Box>
-  );
-}
-
-function BottomBar(props: any) {
-  const navigate = useNavigate();
-
-  const getNextAction = async () => {
-    console.log("Next");
-    await invoke("next_action");
-  };
-  return (
-    <Box color="gray.100" height="100%" width="100%">
-      <Flex
-        flexDir="row"
-        height="100%"
-        width="100%"
-        alignItems="center"
-        justifyContent="center"
-        gap="8px"
-      >
-        <Button
-          onClick={getNextAction}
-          height="100%"
-          width="80px"
-          rounded="none"
-          fontSize="xl"
-        >
-          Next
-        </Button>
-        <Button
-          onClick={() => navigate("/")}
-          height="100%"
-          width="80px"
-          rounded="none"
-          fontSize="xl"
-        >
-          End
-        </Button>
-      </Flex>
-    </Box>
-  );
-}
-
-function JoyPlayer(props: any) {
-  const [imgSrc, setImgSrc] = useState("");
-  return (
-    <Flex
-      direction="column"
-      h="100vh"
-      overflow="hidden"
-      bgColor="purple.900"
-      border="2px"
-      borderColor="pink.200"
-    >
-      <Box h="65%">
-        <Center h="100%" mt="10px">
-          <Image src={imgSrc} height="100%" width="auto" />
-        </Center>
-      </Box>
-
+    <>
       <Box
-        h="30%"
-        mt="10px"
-        overflowY="auto"
         position="absolute"
-        bottom="5%"
-        bgColor="pink"
-      >
-        <DialogueDisplay imageSetter={setImgSrc} />
-      </Box>
+        w="100vw"
+        h="100vh"
+        m="0"
+        p="0"
+        border="2px"
+        rounded="12px"
+        borderColor="pink.200"
+        zIndex="1"
+        pointerEvents="none"
+      ></Box>{" "}
+      <ImagePreview
+        imageSrc={assetSrc}
+        onClose={onClose}
+        isOpen={isOpen}
+        zIndex="1"
+      />
+      {/* This is a hack to fix the bug where the border isn't in full overlay. */}
+      <SToolsContainer tools={tools} />
+      <Flex direction="column" h="100vh" overflow="hidden" bgColor="purple.900">
+        <Box h="65%">
+          <Center h="100%" mt="10px">
+            <Image onClick={onOpen} src={assetSrc} height="100%" width="auto" />
+          </Center>
+        </Box>
 
-      <Box h="5%" w="100%" bottom="0" position="absolute">
-        <BottomBar />
-      </Box>
-    </Flex>
+        <Box
+          h="30%"
+          mt="10px"
+          overflowY="auto"
+          position="absolute"
+          bottom="5%"
+          bgColor="pink"
+        >
+          <DialogueDisplay box={box} />
+        </Box>
+
+        <Box h="5%" w="100%" bottom="0" position="absolute">
+          <BottomBar />
+        </Box>
+      </Flex>
+    </>
   );
 }
 

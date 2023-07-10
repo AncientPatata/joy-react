@@ -125,3 +125,11 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+#personal
+./joiport/*
+*.jpg
+*.png
+src-tauri/joiport/game copy.narra
+src-tauri/joiport/game.narra
+src-tauri/joiport/game.nb
