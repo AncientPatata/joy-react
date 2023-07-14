@@ -1,7 +1,15 @@
-# Tauri + React + Typescript
+# Joy
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+An attempt to integrate Narra into some "visual novel" like software for stories. If nothing else it helped shape Narra and adapt it to more different usecases. 
 
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Usage
+Clone this repository and my narra-rs repo
+Install the packages
+```
+npm install
+```
+Make the narra_rs dependency `src-tauri/Cargo.toml` point to your local narra-rs folder (AncientPatata/narra-rs) 
+then run the following command to build and run the project
+```
+npm run tauri dev
+```
